@@ -11,7 +11,7 @@
   </head>
   <body>
     <h1>Admin Dashboard</h1>
-    <h2>Overall Stats</h2>
+    <h2 class="orange">Overall Statistics</h2>
     <table style="margin-bottom: 2rem">
       <thead>
         <tr>
@@ -62,7 +62,7 @@
         },
       });
     </script>
-    <h2>Add users</h2>
+    <h2 class="orange">Add users</h2>
     <p>Upload a CSV file (name, email) or enter directly</p>
     <form method="POST" enctype="multipart/form-data">
       <input type="file" name="file" accept=".csv" />
@@ -74,7 +74,7 @@
         Send Magic Links
       </button>
     </form>
-    <h2>Create Project</h2>
+    <h2 class="orange">Create Project</h2>
     <p>Upload a CSV file (name, description) or enter directly</p>
     <form method="POST" enctype="multipart/form-data">
       <input type="file" name="project_file" accept=".csv" />
@@ -93,7 +93,7 @@
       {% endfor %}
     </ul>
     {% endif %} {% endwith %}
-    <h2>Current Users</h2>
+    <h2 class="orange">Current Users</h2>
     <table>
       <thead>
         <tr>
@@ -111,7 +111,7 @@
       </tbody>
     </table>
 
-    <h2>Current Projects</h2>
+    <h2 class="orange">Current Projects</h2>
     <table>
       <thead>
         <tr>

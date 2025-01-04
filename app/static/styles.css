@@ -76,3 +76,10 @@ th {
 td {
   background-color: #fff;
 }
+.orange {
+  background-color: rgb(222, 111, 50, 0.7);
+  padding: 1rem;
+}
+.yellow {
+  background-color: #1299a9;
+}

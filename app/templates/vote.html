@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vote</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <style>
+      .project-container {
+        display: flex;
+        align-items: center; /* Align items vertically centered */
+        justify-content: space-between; /* Space between items */
+        margin-bottom: 10px; /* Space between project entries */
+        padding: 10px;
+        background: #f9f9f9; /* Light background for each project */
+        border-radius: 5px; /* Rounded corners */
+      }
+      .project-info {
+        flex: 1; /* Allow the project info to take available space */
+        margin-right: 10px; /* Space between project info and button */
+      }
+      button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Voting</h1>
+    <h3>Welcome {{user.name}}</h3>
+    <p>
+      You've been invited to vote on the following projects. Read through all
+      the projects first, before indicating which projects you would like to
+      support.
+    </p>
+    <p>
+      <strong>You cannot change your preferences once you click submit.</strong>
+    </p>
+    <form method="POST">
+      {% for project in projects %}
+      <div class="project-container">
+        <div class="project-info">
+          <strong>{{ project.project_name }}</strong>: {{ project.description }}
+        </div>
+        <label>
+          <input type="checkbox" name="project_{{ project.id }}" value="1" />
+          Approve
+        </label>
+      </div>
+      {% endfor %}
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

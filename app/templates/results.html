@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Results</title>
+  </head>
+  <body>
+    <h1>Voting Results</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Question ID</th>
+          <th>Vote Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vote in votes %}
+        <tr>
+          <td>{{ vote[1] }}</td>
+          <td>{{ vote[2] }}</td>
+          <td>{{ vote[3] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

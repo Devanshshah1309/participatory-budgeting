@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin Dashboard</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <h1>Admin Dashboard</h1>
+    <h2>Overall Stats</h2>
+    <table style="margin-bottom: 2rem">
+      <thead>
+        <tr>
+          <th style="width: 50%">Total Users</th>
+          <th style="width: 50%">Users Already Voted</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ users_count }}</td>
+          <td>{{ users_submitted_count }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="height: 200px">
+      <canvas id="votingChart" style="height: 60%"></canvas>
+    </div>
+    <script>
+      const ctx = document.getElementById("votingChart").getContext("2d");
+      var project_names = {{project_names | tojson | safe}};
+      var project_percentages = {{ project_percentages | tojson | safe }};
+      console.log("hello", project_names);
+      const votingChart = new Chart(ctx, {
+        type: "bar", // You can change this to 'pie', 'line', etc.
+        data: {
+          labels: project_names, // Project names
+          datasets: [
+            {
+              label: "Percentage of Users who Approved",
+              data: project_percentages, // Voting percentages
+              backgroundColor: "rgba(40, 167, 69, 0.5)", // Green color
+              borderColor: "rgba(40, 167, 69, 1)",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "Percentage (%)",
+              },
+            },
+          },
+        },
+      });
+    </script>
+    <h2>Add users</h2>
+    <p>Upload a CSV file (name, email) or enter directly</p>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".csv" />
+      <textarea
+        name="csv_input"
+        placeholder="Enter comma-separated values (name,email)"
+      ></textarea>
+      <button type="submit" name="action" value="upload_users">
+        Send Magic Links
+      </button>
+    </form>
+    <h2>Create Project</h2>
+    <p>Upload a CSV file (name, description) or enter directly</p>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="project_file" accept=".csv" />
+      <textarea
+        name="csv_input"
+        placeholder="Enter comma-separated values (name, description)"
+      ></textarea>
+      <button type="submit" name="action" value="upload_projects">
+        Upload Projects
+      </button>
+    </form>
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul>
+      {% for message in messages %}
+      <li class="flash-message">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+    <h2>Current Users</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Current Projects</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Project Name</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for project in projects %}
+        <tr>
+          <td>{{ project.project_name }}</td>
+          <td>{{ project.description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <script>
+      // Automatically hide flash messages after 5 seconds
+      setTimeout(function () {
+        const flashMessages = document.querySelectorAll(".flash-message");
+        flashMessages.forEach(function (message) {
+          message.style.display = "none";
+        });
+      }, 5000); // 5000 milliseconds = 5 seconds
+    </script>
+  </body>
+</html>

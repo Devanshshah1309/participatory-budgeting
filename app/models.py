@@ -11,6 +11,7 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.String(500), nullable=True)  # Optional description for the project
+    cost = db.Column(db.Integer, nullable=True)
 
 class UserPreference(db.Model):
     id = db.Column(db.Integer, primary_key=True)

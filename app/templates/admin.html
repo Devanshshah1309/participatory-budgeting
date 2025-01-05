@@ -29,39 +29,38 @@
     <div style="height: 200px">
       <canvas id="votingChart" style="height: 60%"></canvas>
     </div>
-    <script>
-      const ctx = document.getElementById("votingChart").getContext("2d");
-      var project_names = {{project_names | tojson | safe}};
-      var project_percentages = {{ project_percentages | tojson | safe }};
-      console.log("hello", project_names);
-      const votingChart = new Chart(ctx, {
-        type: "bar", // You can change this to 'pie', 'line', etc.
-        data: {
-          labels: project_names, // Project names
-          datasets: [
-            {
-              label: "Percentage of Users who Approved",
-              data: project_percentages, // Voting percentages
-              backgroundColor: "rgba(40, 167, 69, 0.5)", // Green color
-              borderColor: "rgba(40, 167, 69, 1)",
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "Percentage (%)",
-              },
-            },
-          },
-        },
-      });
-    </script>
+    <h2 class="orange">Voting Algorithm</h2>
+    <p>
+      This app uses the method of equal shares to determine which projects
+      should be selected.
+    </p>
+    <p>
+      A project is only selected if it has enough voters supporting it. Excess
+      budget is left unused.
+    </p>
+    <div style="display: flex; justify-content: center; margin-top: 20px">
+      <form id="budgetForm" style="display: flex; align-items: center">
+        <input
+          type="number"
+          id="budget"
+          name="budget"
+          placeholder="Enter total budget"
+          required
+          style="margin-right: 10px; width: 50%; padding: 10px 15px"
+        />
+        <button
+          id="runEqualShares"
+          class="yellow"
+          style="width: 50%"
+          name="action"
+          value="run_algorithm"
+          type="button"
+        >
+          Run Equal Shares Algorithm
+        </button>
+      </form>
+    </div>
+    <div id="equalSharesResults" style="margin-top: 20px"></div>
     <h2 class="orange">Add users</h2>
     <p>Upload a CSV file (name, email) or enter directly</p>
     <form method="POST" enctype="multipart/form-data">
@@ -75,12 +74,12 @@
       </button>
     </form>
     <h2 class="orange">Create Project</h2>
-    <p>Upload a CSV file (name, description) or enter directly</p>
+    <p>Upload a CSV file (name, description, cost) or enter directly</p>
     <form method="POST" enctype="multipart/form-data">
       <input type="file" name="project_file" accept=".csv" />
       <textarea
         name="csv_input"
-        placeholder="Enter comma-separated values (name, description)"
+        placeholder="Enter comma-separated values (name, description, cost)"
       ></textarea>
       <button type="submit" name="action" value="upload_projects">
         Upload Projects
@@ -117,6 +116,7 @@
         <tr>
           <th>Project Name</th>
           <th>Description</th>
+          <th>Cost</th>
         </tr>
       </thead>
       <tbody>
@@ -124,6 +124,7 @@
         <tr>
           <td>{{ project.project_name }}</td>
           <td>{{ project.description }}</td>
+          <td>{{ project.cost }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -137,6 +138,66 @@
           message.style.display = "none";
         });
       }, 5000); // 5000 milliseconds = 5 seconds
+    </script>
+    <script>
+      const ctx = document.getElementById("votingChart").getContext("2d");
+      var project_names = {{project_names | tojson | safe}};
+      var project_percentages = {{ project_percentages | tojson | safe }};
+      console.log("hello", project_names);
+      const votingChart = new Chart(ctx, {
+        type: "bar", // You can change this to 'pie', 'line', etc.
+        data: {
+          labels: project_names, // Project names
+          datasets: [
+            {
+              label: "Percentage of Users who Approved",
+              data: project_percentages, // Voting percentages
+              backgroundColor: "rgba(40, 167, 69, 0.5)", // Green color
+              borderColor: "rgba(40, 167, 69, 1)",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "Percentage (%)",
+              },
+            },
+          },
+        },
+      });
+    </script>
+    <script>
+      document
+        .getElementById("runEqualShares")
+        .addEventListener("click", function () {
+          const budget = document.getElementById("budget").value; // Get the budget value
+
+          fetch("/admin/run_algo", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              budget: budget,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              // Display the results
+              const resultsDiv = document.getElementById("equalSharesResults");
+              resultsDiv.innerHTML =
+                "<h3>Chosen Projects:</h3><ul>" +
+                data.result.map((project) => `<li>${project}</li>`).join("") +
+                "</ul>";
+            })
+            .catch((error) => console.error("Error:", error));
+        });
     </script>
   </body>
 </html>

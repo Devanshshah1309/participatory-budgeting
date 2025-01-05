@@ -1,9 +1,11 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash
+from flask import Blueprint, request, render_template, redirect, url_for, flash, jsonify
 from app.models import User, Project, UserPreference
 from app import db
 from app.utils import send_email
 import uuid
 import pandas as pd
+from collections import defaultdict
+from app.voting import approval_voting_method_of_equal_shares
 
 admin_bp = Blueprint('admin', __name__)
 vote_bp = Blueprint('vote', __name__)
@@ -44,17 +46,18 @@ def admin_dashboard():
                 for _, row in df.iterrows():
                     project_name = row['name']
                     description = row.get('description', '')  # Optional description
+                    cost = row.get('cost', '')
                     if project_name:
-                        project = Project(project_name=project_name, description=description)
+                        project = Project(project_name=project_name, description=description, cost=cost)
                         db.session.add(project)
                 db.session.commit()
                 flash('Projects uploaded successfully!', 'success')
             csv_input = request.form.get('csv_input')
             if csv_input:
                 entries = [entry.strip().split(',') for entry in csv_input.splitlines()]
-                for name, description in entries:
+                for name, description, cost in entries:
                     if name:  # Ensure name is not empty
-                        project = Project(project_name=name, description=description.strip())
+                        project = Project(project_name=name, description=description.strip(), cost=cost)
                         db.session.add(project)
                 db.session.commit()
                 flash('Projects uploaded successfully from input!', 'success')
@@ -80,6 +83,32 @@ def admin_dashboard():
     return render_template('admin.html', users=users, projects=projects, user_preferences=user_preferences, project_names=project_names, project_percentages=project_percentages,
                            users_count=len(users),
                            users_submitted_count=total_votes)
+
+@admin_bp.route('/admin/run_algo', methods=['POST'])
+def run_algo():
+    data = request.get_json()
+    budget = int(data.get('budget'))
+
+    user_preferences = UserPreference.query.all()
+    projects = Project.query.all()
+    project_id_cost = [(p.id, p.cost) for p in projects]
+
+    voters = defaultdict(set)
+    for u in user_preferences:
+        if u.preference_value:
+            voters[u.user_id].add(u.project_id)
+    
+    k = len(projects) # TODO: let admin specify?
+    
+    chosen = approval_voting_method_of_equal_shares(projects=project_id_cost, voters=list(voters.values()), k=k, budget=budget)
+
+    chosen_names = []
+    for p in projects:
+        if p.id in chosen:
+            chosen_names.append(p.project_name)
+
+    return jsonify({'result': chosen_names})
+
 
 @vote_bp.route('/vote/<magic_link>', methods=['GET', 'POST'])
 def vote(magic_link):

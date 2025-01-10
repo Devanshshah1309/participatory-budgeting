@@ -33,6 +33,9 @@ def approval_voting_method_of_equal_shares(projects, voters, k, budget):
 
             for voter_id, voter in enumerate(voters):
                 if project_id in voter:
+                    # TODO: fix logic, i think if someone else has more budget left
+                    # then he can compensate for your lack of shares and still meet
+                    # the approval criteria
                     contribution = min(voter_shares[voter_id], cost / total_approval)
                     contributions[voter_id] = contribution
                     total_contribution += contribution

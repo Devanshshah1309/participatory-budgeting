@@ -98,6 +98,7 @@
         <tr>
           <th>Name</th>
           <th>Email</th>
+          <th>Magic Link</th>
         </tr>
       </thead>
       <tbody>
@@ -105,6 +106,12 @@
         <tr>
           <td>{{ user.name }}</td>
           <td>{{ user.email }}</td>
+          <td>
+            <a href="/vote/{{ user.magic_link }}"
+              >/vote/{{ user.magic_link }}</a
+            >
+          </td>
+          <!-- Magic Link -->
         </tr>
         {% endfor %}
       </tbody>

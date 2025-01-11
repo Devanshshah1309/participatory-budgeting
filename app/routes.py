@@ -19,14 +19,34 @@ def admin_dashboard():
         if action == 'upload_users':
             file = request.files['file']
             if file:
-                df = pd.read_csv(file)
-                for _, row in df.iterrows():
-                    magic_link = str(uuid.uuid4())
-                    user = User(name=row['name'], email=row['email'], magic_link=magic_link)
-                    db.session.add(user)
-                    db.session.commit()
-                    send_email(row['email'], magic_link)
-                flash('Magic links sent successfully!', 'success')
+                try:
+                    df = pd.read_csv(file)
+                    required_headers = ['name', 'email']  # Define required headers
+                    for header in required_headers:
+                        if header not in df.columns:
+                            return user_error(f"Missing required header: '{header}'")
+
+                    for index, row in df.iterrows():
+                        if len(row) != len(required_headers):
+                            return user_error(f"Row {index + 1} has {len(row)} values (expecting {len(required_headers)})")
+                        if pd.isnull(row['name']) or pd.isnull(row['email']):
+                            return user_error(f"Row {index + 1} contains missing values.")
+
+                    for _, row in df.iterrows():
+                        magic_link = str(uuid.uuid4())
+                        user = User(name=row['name'], email=row['email'], magic_link=magic_link)
+                        db.session.add(user)
+                        db.session.commit()
+                        send_email(row['email'], magic_link)
+
+                    flash('Magic links sent successfully!', 'success')
+
+                except pd.errors.EmptyDataError:
+                    return user_error("The uploaded file is empty.")
+                except pd.errors.ParserError:
+                    return user_error("Error parsing the CSV file. Please ensure it is in the correct format.")
+                except Exception as e:
+                    return user_error(f"An unexpected error occurred: {str(e)}")
             csv_input = request.form.get('csv_input')
             if csv_input:
                 entries = [entry.strip().split(',') for entry in csv_input.splitlines()]
@@ -45,16 +65,37 @@ def admin_dashboard():
         elif action == 'upload_projects':
             file = request.files['project_file']
             if file:
-                df = pd.read_csv(file)
-                for _, row in df.iterrows():
-                    project_name = row['name']
-                    description = row.get('description', '')  # Optional description
-                    cost = row.get('cost', '')
-                    if project_name:
-                        project = Project(project_name=project_name, description=description.strip(), cost=cost)
-                        db.session.add(project)
-                db.session.commit()
-                flash('Projects uploaded successfully!', 'success')
+                try:
+                    df = pd.read_csv(file)
+                    required_headers = ['name', 'description', 'cost']  # Define required headers
+                    for header in required_headers:
+                        if header not in df.columns:
+                            return user_error(f"Missing required header: '{header}'")
+
+                    for index, row in df.iterrows():
+                        if len(row) != len(required_headers):
+                            return user_error(f"Row {index + 1} has {len(row)} values (expecting {len(required_headers)})")
+                        if pd.isnull(row['name']) or pd.isnull(row['description']) or pd.isnull(row['cost']):
+                            return user_error(f"Row {index + 1} contains missing values.")
+
+                    for _, row in df.iterrows():
+                        project_name = row['name']
+                        description = row.get('description', '').strip()  # Optional description
+                        cost = row.get('cost', '')
+
+                        if project_name:  # Ensure project_name is not empty
+                            project = Project(project_name=project_name, description=description, cost=cost)
+                            db.session.add(project)
+
+                    db.session.commit()
+                    flash('Projects uploaded successfully!', 'success')
+
+                except pd.errors.EmptyDataError:
+                    return user_error("The uploaded file is empty.")
+                except pd.errors.ParserError:
+                    return user_error("Error parsing the CSV file. Please ensure it is in the correct format.")
+                except Exception as e:
+                    return user_error(f"An unexpected error occurred: {str(e)}")
             csv_input = request.form.get('csv_input')
             if csv_input:
                 entries = [entry.strip().split(',') for entry in csv_input.splitlines()]

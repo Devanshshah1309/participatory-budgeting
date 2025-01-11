@@ -1,9 +1,15 @@
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from flask import current_app
+from flask import current_app, render_template
 
 base_url = os.getenv('BASE_URL', 'http://localhost:5000')
+
+def user_error(message):
+    return render_template('error.html', message=message), 400
+
+def server_error(message):
+    return render_template('error.html', message=message), 500
 
 def send_email(email, magic_link):
     message = Mail(

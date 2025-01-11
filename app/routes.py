@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, jsonify
 from app.models import User, Project, UserPreference
 from app import db
-from app.utils import send_email
+from app.utils import send_email, user_error
 import uuid
 import pandas as pd
 from collections import defaultdict
@@ -30,6 +30,9 @@ def admin_dashboard():
             csv_input = request.form.get('csv_input')
             if csv_input:
                 entries = [entry.strip().split(',') for entry in csv_input.splitlines()]
+                for index, entry in enumerate(entries):
+                    if len(entry) != 2:
+                        return user_error(f"Bad data: row {index + 1} has {len(entry)} values (expecting 2)")
                 for name, email in entries:
                     magic_link = str(uuid.uuid4())
                     user = User(name=name, email=email, magic_link=magic_link)
@@ -48,13 +51,16 @@ def admin_dashboard():
                     description = row.get('description', '')  # Optional description
                     cost = row.get('cost', '')
                     if project_name:
-                        project = Project(project_name=project_name, description=description, cost=cost)
+                        project = Project(project_name=project_name, description=description.strip(), cost=cost)
                         db.session.add(project)
                 db.session.commit()
                 flash('Projects uploaded successfully!', 'success')
             csv_input = request.form.get('csv_input')
             if csv_input:
                 entries = [entry.strip().split(',') for entry in csv_input.splitlines()]
+                for entry in entries:
+                    if len(entry) != 3:
+                        return user_error(f"Bad data: row {index + 1} has {len(entry)} values (expecting 3)")
                 for name, description, cost in entries:
                     if name:  # Ensure name is not empty
                         project = Project(project_name=name, description=description.strip(), cost=cost)
@@ -114,7 +120,6 @@ def run_algo():
 def vote(magic_link):
     user = User.query.filter_by(magic_link=magic_link).first()
     if user and not user.has_voted:
-        print(request.form)
         if request.method == 'POST':
             projects = Project.query.all()  # Fetch all projects
             for project in projects:

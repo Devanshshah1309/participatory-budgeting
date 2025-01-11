@@ -83,3 +83,6 @@ td {
 .yellow:hover {
   background-color: rgba(15, 115, 192, 1);
 }
+.red {
+  background-color: rgba(250, 10, 10, 0.5);
+}

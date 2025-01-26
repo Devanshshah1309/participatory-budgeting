@@ -63,25 +63,43 @@
     <div id="equalSharesResults" style="margin-top: 20px"></div>
     <h2 class="orange">Add users</h2>
     <p>Upload a CSV file (name, email) or enter directly</p>
+    <p>Example: Devansh,devansh@u.nus.edu</p>
     <form method="POST" enctype="multipart/form-data">
       <input type="file" name="file" accept=".csv" />
       <textarea
-        name="csv_input"
+        name="csv_input_users"
         placeholder="Enter comma-separated values (name,email)"
       ></textarea>
-      <button type="submit" name="action" value="upload_users">
+      <button
+        type="submit"
+        name="action"
+        value="upload_users"
+        onclick="return validateCSVInputForUsers()"
+      >
         Send Magic Links
       </button>
     </form>
     <h2 class="orange">Create Project</h2>
     <p>Upload a CSV file (name, description, cost) or enter directly</p>
+    <p>
+      Example: Marina Bay Park,A beautiful part beside Marina Bay Sands,15000
+    </p>
+    <p>
+      <strong>Note:</strong> The cost should be a number, without any dollar
+      sign or commas.
+    </p>
     <form method="POST" enctype="multipart/form-data">
       <input type="file" name="project_file" accept=".csv" />
       <textarea
-        name="csv_input"
+        name="csv_input_projects"
         placeholder="Enter comma-separated values (name, description, cost)"
       ></textarea>
-      <button type="submit" name="action" value="upload_projects">
+      <button
+        type="submit"
+        name="action"
+        value="upload_projects"
+        onclick="return validateCSVInputForProjects()"
+      >
         Upload Projects
       </button>
     </form>
@@ -136,7 +154,43 @@
         {% endfor %}
       </tbody>
     </table>
+    <script>
+      function validateCSVInputForProjects() {
+        const csvInput = document.querySelector(
+          'textarea[name="csv_input_projects"]'
+        ).value;
+        const lines = csvInput.split("\n");
 
+        for (let i = 0; i < lines.length; i++) {
+          const entry = lines[i].split(",");
+          if (entry.length !== 3) {
+            alert(
+              `Row ${
+                i + 1
+              } must contain exactly three values (name, description, cost).`
+            );
+            return false; // Prevent form submission
+          }
+
+          const cost = entry[2].trim();
+          if (!isNonNegativeInteger(cost)) {
+            alert(
+              `Invalid cost value in row ${
+                i + 1
+              }: '${cost}'. It must be a non-negative integer.`
+            );
+            return false; // Prevent form submission
+          }
+        }
+
+        return true; // Allow form submission if all checks pass
+      }
+
+      function isNonNegativeInteger(value) {
+        const num = Number(value);
+        return Number.isInteger(num) && num >= 0; // Check if it's a non-negative integer
+      }
+    </script>
     <script>
       // Automatically hide flash messages after 5 seconds
       setTimeout(function () {
@@ -145,6 +199,37 @@
           message.style.display = "none";
         });
       }, 5000); // 5000 milliseconds = 5 seconds
+    </script>
+    <script>
+      function validateCSVInputForUsers() {
+        const csvInput = document.querySelector(
+          'textarea[name="csv_input_users"]'
+        ).value;
+        const lines = csvInput.split("\n");
+
+        for (let i = 0; i < lines.length; i++) {
+          const entry = lines[i].split(",");
+          if (entry.length !== 2) {
+            alert(
+              `Row ${i + 1} must contain exactly two values (name, email).`
+            );
+            return false; // Prevent form submission
+          }
+
+          const name = entry[0].trim();
+          const email = entry[1].trim();
+          if (!name) {
+            alert(`Name cannot be empty in row ${i + 1}.`);
+            return false; // Prevent form submission
+          }
+          if (!email) {
+            alert(`Email cannot be empty in row ${i + 1}.`);
+            return false; // Prevent form submission
+          }
+        }
+
+        return true; // Allow form submission if all checks pass
+      }
     </script>
     <script>
       const ctx = document.getElementById("votingChart").getContext("2d");

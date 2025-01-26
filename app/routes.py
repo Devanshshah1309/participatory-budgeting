@@ -47,7 +47,7 @@ def admin_dashboard():
                     return user_error("Error parsing the CSV file. Please ensure it is in the correct format.")
                 except Exception as e:
                     return user_error(f"An unexpected error occurred: {str(e)}")
-            csv_input = request.form.get('csv_input')
+            csv_input = request.form.get('csv_input_users')
             if csv_input:
                 entries = [entry.strip().split(',') for entry in csv_input.splitlines()]
                 for index, entry in enumerate(entries):
@@ -79,9 +79,18 @@ def admin_dashboard():
                             return user_error(f"Row {index + 1} contains missing values.")
 
                     for _, row in df.iterrows():
-                        project_name = row['name']
+                        project_name = row['name'].strip()
                         description = row.get('description', '').strip()  # Optional description
                         cost = row.get('cost', '')
+                        
+                        if not project_name:  # Ensure name is not empty
+                            return user_error("Project name cannot be empty.")
+                        try:
+                            cost_value = float(cost)
+                            if cost_value < 0:
+                                return user_error("Cost must be a non-negative number.")
+                        except ValueError:
+                            return user_error(f"Invalid cost value: '{cost}'. It must be a valid number.")
 
                         if project_name:  # Ensure project_name is not empty
                             project = Project(project_name=project_name, description=description, cost=cost)
@@ -96,16 +105,25 @@ def admin_dashboard():
                     return user_error("Error parsing the CSV file. Please ensure it is in the correct format.")
                 except Exception as e:
                     return user_error(f"An unexpected error occurred: {str(e)}")
-            csv_input = request.form.get('csv_input')
+            csv_input = request.form.get('csv_input_projects')
             if csv_input:
                 entries = [entry.strip().split(',') for entry in csv_input.splitlines()]
-                for entry in entries:
+                for index, entry in enumerate(entries):
                     if len(entry) != 3:
                         return user_error(f"Bad data: row {index + 1} has {len(entry)} values (expecting 3)")
                 for name, description, cost in entries:
-                    if name:  # Ensure name is not empty
-                        project = Project(project_name=name, description=description.strip(), cost=cost)
-                        db.session.add(project)
+                    if not name:  # Ensure name is not empty
+                        return user_error("Project name cannot be empty.")
+                    try:
+                        cost_value = float(cost)
+                        if cost_value < 0:
+                            return user_error("Cost must be a non-negative number.")
+                    except ValueError:
+                        return user_error(f"Invalid cost value: '{cost}'. It must be a valid number.")
+
+                    # If validations pass, create the project
+                    project = Project(project_name=name, description=description.strip(), cost=cost_value)
+                    db.session.add(project)
                 db.session.commit()
                 flash('Projects uploaded successfully from input!', 'success')
 
